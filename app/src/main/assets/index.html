@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CYM Leaders Tracker</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;min-height:100%;margin:0}
+body{font-family:Arial,sans-serif;background:#f5f5f5;color:#222;overflow-x:hidden;-webkit-text-size-adjust:100%;padding-bottom:24px}
+header{background:#222;color:#fff;padding:12px max(12px,env(safe-area-inset-left));text-align:center;position:sticky;top:0;z-index:20}
+header h1{margin:0 0 6px;font-size:22px}.container{width:100%;max-width:1100px;margin:auto;padding:10px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+button{border:0;border-radius:7px;min-height:42px;padding:9px 14px;font-size:14px;touch-action:manipulation;cursor:pointer}
+.primary{background:#4CAF50;color:#fff}.dark{background:#222;color:#fff}.light{background:#ddd;color:#222}.danger{background:#d33;color:#fff}
+.month-selector{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.month-selector button{background:#ccc}.month-selector button.active{background:#4CAF50;color:#fff}
+.form-section,.panel{background:#fff;padding:12px;border-radius:9px;width:100%;overflow:hidden;box-shadow:0 1px 4px #0001;margin-bottom:12px}
+input{font-size:16px}.name-row{display:flex;gap:8px;justify-content:center;margin:10px 0}.name-row input{padding:10px;width:min(90%,380px);border:1px solid #bbb;border-radius:6px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.calendar div{border:1px solid #ccc;padding:5px 2px;text-align:center;min-width:0;font-size:13px;min-height:42px}.calendar input{width:20px;height:20px}
+.attendance-section label{display:block;margin-top:14px;font-weight:bold}.attendance-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:5px}.week-wrapper{display:flex;align-items:center;gap:3px;min-width:0}.attendance-grid button{width:100%;padding:5px 2px;border:1px solid #ccc;background:#eee;font-size:12px}.attendance-grid button.P{background:#4CAF50;color:#fff}.attendance-grid button.A{background:#f44336;color:#fff}.attendance-grid button.NM{background:#999;color:#fff}.attendance-input{width:100%;min-width:0;padding:7px 2px;text-align:center;border:1px solid #bbb;border-radius:4px}
+.legend span{font-size:13px;margin-right:8px}.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}th{background:#eee;position:sticky;top:0}
+.record-card{border:1px solid #ddd;border-radius:7px;padding:10px;margin:8px 0}.record-card strong{display:block}.small{font-size:12px;color:#666}.error{color:#b00020;font-size:13px}.ok{color:#137333;font-size:13px}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.detail-box{background:#f7f7f7;padding:8px;border-radius:6px}.detail-box h4{margin:0 0 6px}
+@media(min-width:600px){.month-selector{grid-template-columns:repeat(6,minmax(0,1fr))}.attendance-grid{grid-template-columns:repeat(5,minmax(80px,1fr))}}
+@media(max-width:380px){.container{padding:7px}.month-selector button{font-size:12px;padding:7px 2px}.attendance-grid{gap:3px}.attendance-grid button{font-size:10px}.attendance-input{font-size:12px}}
+</style>
+</head>
+<body>
+<header>
+<h1>CYM Leaders’ Tracker</h1>
+<div id="user-info">Connecting…</div>
+</header>
+
+<div class="container">
+<div class="toolbar">
+<button class="primary" onclick="saveFullPageImage()">Save Page as Image</button>
+<button class="dark" onclick="submitCurrentMonth()">Save / Submit to Firebase</button>
+<button class="light" onclick="showLeader()">Leader Form</button>
+<button class="light" onclick="showAdminLogin()">Admin</button>
+</div>
+<div id="message"></div>
+
+<section id="leader-view">
+<div class="name-row"><input id="username" placeholder="Enter full name" autocomplete="name"></div>
+<div id="month-selector" class="month-selector"></div>
+<div class="form-section">
+<h2 id="month-title"></h2>
+<h3>DEVOTION: <span id="devotion-count">0</span> days</h3>
+<div id="calendar" class="calendar"></div>
+<div class="attendance-section" id="attendance-forms"></div>
+</div>
+</section>
+
+<section id="admin-login" class="panel hidden">
+<h2>Admin Login</h2>
+<p class="small">Use the Firebase Authentication account configured as the administrator.</p>
+<input id="admin-email" type="email" placeholder="Admin email" style="width:100%;padding:10px;margin:5px 0">
+<input id="admin-password" type="password" placeholder="Password" style="width:100%;padding:10px;margin:5px 0">
+<div class="toolbar"><button class="dark" onclick="adminLogin()">Login</button><button class="light" onclick="showLeader()">Cancel</button></div>
+<div id="admin-error" class="error"></div>
+</section>
+
+<section id="admin-view" class="hidden">
+<div class="panel">
+<h2>Admin Dashboard</h2>
+<div class="toolbar">
+<button class="primary" onclick="loadAdminRecords()">Refresh Records</button>
+<button class="light" onclick="exportCSV()">Export CSV</button>
+<button class="danger" onclick="adminLogout()">Logout</button>
+</div>
+<div id="admin-status" class="small"></div>
+<input id="admin-search" placeholder="Search leader name…" oninput="renderAdminRecords()" style="width:100%;padding:10px;margin:8px 0">
+<div id="records"></div>
+</div>
+<div id="record-detail" class="panel hidden"></div>
+</section>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyCsQrzsGHZ7o7VY9EKIwSTnrBIi1x7fR_I",
+ authDomain:"cym-leaders-web-type-handouts.firebaseapp.com",
+ projectId:"cym-leaders-web-type-handouts",
+ storageBucket:"cym-leaders-web-type-handouts.firebasestorage.app",
+ messagingSenderId:"936994717986",
+ appId:"1:936994717986:web:a36140d381a832b940e57b",
+ measurementId:"G-QNLQC649FX"
+};
+const ADMIN_EMAIL="oryhbrx22@gmail.com";
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app), db=getFirestore(app);
+const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const sections=["W12 DISCIPLESHIP","CELL GROUP","W12 MEETING","SUNDAY SERVICES","CYM NIGHT","THURSDAY NIGHT TRAINING","PRAYER MEETING"];
+let currentMonth=0, year=new Date().getFullYear(), currentUser=null, adminRecords=[];
+
+function msg(t,cls="small"){const e=document.getElementById("message");e.className=cls;e.textContent=t}
+function daysInMonth(m,y){return new Date(y,m+1,0).getDate()}
+function key(k){return `${k}_${year}_${currentMonth}`}
+function renderMonthButtons(){
+ const el=document.getElementById("month-selector");el.innerHTML="";
+ months.forEach((m,i)=>{const b=document.createElement("button");b.textContent=m;if(i===currentMonth)b.classList.add("active");
+ b.onclick=()=>{currentMonth=i;document.querySelectorAll(".month-selector button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderCalendar();renderAttendance()};el.appendChild(b)})
+}
+function renderCalendar(){
+ const cal=document.getElementById("calendar");cal.innerHTML="";document.getElementById("month-title").textContent=`${months[currentMonth]} ${year}`;
+ ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>{const x=document.createElement("div");x.innerHTML="<b>"+d+"</b>";cal.appendChild(x)});
+ const first=new Date(year,currentMonth,1).getDay();for(let i=0;i<first;i++)cal.appendChild(document.createElement("div"));
+ for(let d=1;d<=daysInMonth(currentMonth,year);d++){const c=document.createElement("div");const cb=document.createElement("input");cb.type="checkbox";cb.checked=localStorage.getItem(key(`dev_${d}`))==="1";cb.onchange=()=>{localStorage.setItem(key(`dev_${d}`),cb.checked?"1":"0");updateDevotion()};c.innerHTML=d+"<br>";c.appendChild(cb);cal.appendChild(c)} updateDevotion()
+}
+function updateDevotion(){let c=0;document.querySelectorAll("#calendar input").forEach(x=>{if(x.checked)c++});document.getElementById("devotion-count").textContent=c}
+function renderAttendance(){
+ const a=document.getElementById("attendance-forms");a.innerHTML=`<strong>FULL MONTH ATTENDANCE</strong><br><div class="legend"><span>🟢 Present</span><span>🔴 Absent</span><span>⚪ No Meeting</span></div>`;
+ sections.forEach(sec=>{const lab=document.createElement("label");lab.textContent=sec;a.appendChild(lab);const grid=document.createElement("div");grid.className="attendance-grid";
+ for(let w=1;w<=5;w++){const wrap=document.createElement("div");wrap.className="week-wrapper";const b=document.createElement("button");b.textContent=`Week ${w}`;const k=key(`att_${sec}_${w}`),saved=localStorage.getItem(k)||"NM";b.dataset.state=saved;b.classList.add(saved);
+ b.onclick=()=>{let n=b.dataset.state==="NM"?"P":b.dataset.state==="P"?"A":"NM";b.classList.remove("P","A","NM");b.classList.add(n);b.dataset.state=n;localStorage.setItem(k,n)};
+ wrap.appendChild(b);
+ if(sec==="W12 DISCIPLESHIP"||sec==="CELL GROUP"){const input=document.createElement("input");input.type="number";input.min=0;input.max=99;input.placeholder="0";input.className="attendance-input";const ik=key(`attcount_${sec}_${w}`);input.value=localStorage.getItem(ik)||"";input.oninput=()=>localStorage.setItem(ik,input.value);wrap.appendChild(input)}
+ grid.appendChild(wrap)}a.appendChild(grid)})
+}
+function collectData(){
+ const devotion={};for(let d=1;d<=daysInMonth(currentMonth,year);d++)devotion[d]=localStorage.getItem(key(`dev_${d}`))==="1";
+ const attendance={};sections.forEach(sec=>{attendance[sec]={};for(let w=1;w<=5;w++){attendance[sec][`week${w}`]=localStorage.getItem(key(`att_${sec}_${w}`))||"NM";if(sec==="W12 DISCIPLESHIP"||sec==="CELL GROUP")attendance[sec][`week${w}_count`]=localStorage.getItem(key(`attcount_${sec}_${w}`))||""}});
+ return {leaderName:document.getElementById("username").value.trim(),year,month:currentMonth,monthName:months[currentMonth],devotion,devotionDays:Object.values(devotion).filter(Boolean).length,attendance,submittedAt:new Date().toISOString(),uid:currentUser?.uid||null}
+}
+async function submitCurrentMonth(){
+ if(!currentUser){msg("Still connecting to Firebase…","error");return}
+ const data=collectData();if(!data.leaderName){msg("Please enter the leader's full name.","error");return}
+ try{await setDoc(doc(db,"submissions",`${currentUser.uid}_${year}_${String(currentMonth).padStart(2,"0")}`),data,{merge:true});
+ await setDoc(doc(db,"leaders",currentUser.uid),{name:data.leaderName,uid:currentUser.uid,lastUpdated:new Date().toISOString()},{merge:true});
+ msg(`Saved ${data.monthName} ${year} to Firebase.`,"ok")
+ }catch(e){msg("Firebase save failed: "+e.message,"error")}
+}
+window.submitCurrentMonth=submitCurrentMonth;
+
+async function ensureLeaderAuth(){try{await signInAnonymously(auth)}catch(e){msg("Firebase authentication failed. Enable Anonymous Authentication in Firebase Console.","error")}}
+onAuthStateChanged(auth,u=>{currentUser=u;if(u){document.getElementById("user-info").textContent=u.email?`Admin: ${u.email}`:`Leader session: ${u.uid.slice(0,8)}…`;document.getElementById("username").value=localStorage.getItem("user")||""}});
+document.getElementById("username").oninput=e=>{localStorage.setItem("user",e.target.value);document.getElementById("user-info").textContent="Leader: "+e.target.value}
+window.showLeader=()=>{document.getElementById("leader-view").classList.remove("hidden");document.getElementById("admin-login").classList.add("hidden");document.getElementById("admin-view").classList.add("hidden")}
+window.showAdminLogin=()=>{document.getElementById("leader-view").classList.add("hidden");document.getElementById("admin-login").classList.remove("hidden");document.getElementById("admin-view").classList.add("hidden")}
+window.adminLogin=async()=>{const em=document.getElementById("admin-email").value.trim(),pw=document.getElementById("admin-password").value;const er=document.getElementById("admin-error");er.textContent="";if(em!==ADMIN_EMAIL){er.textContent="This account is not the configured admin.";return}try{await signInWithEmailAndPassword(auth,em,pw);document.getElementById("admin-login").classList.add("hidden");document.getElementById("admin-view").classList.remove("hidden");await loadAdminRecords()}catch(e){er.textContent=e.message}}
+window.adminLogout=async()=>{await signOut(auth);showLeader();ensureLeaderAuth()}
+window.loadAdminRecords=async()=>{
+ const st=document.getElementById("admin-status");st.textContent="Loading…";
+ try{const snap=await getDocs(query(collection(db,"submissions"),orderBy("submittedAt","desc")));adminRecords=snap.docs.map(d=>({id:d.id,...d.data()}));renderAdminRecords();st.textContent=`${adminRecords.length} submission(s)`}catch(e){st.textContent="Could not load records: "+e.message}
+}
+window.renderAdminRecords=()=>{
+ const q=(document.getElementById("admin-search").value||"").toLowerCase();const el=document.getElementById("records");el.innerHTML="";
+ adminRecords.filter(r=>(r.leaderName||"").toLowerCase().includes(q)).forEach((r,i)=>{const c=document.createElement("div");c.className="record-card";c.innerHTML=`<strong>${escapeHtml(r.leaderName||"Unnamed")}</strong><span class="small">${escapeHtml(r.monthName||"")} ${r.year||""} · Devotion: ${r.devotionDays||0} days<br>Submitted: ${escapeHtml(r.submittedAt||"")}</span><button class="dark" style="margin-top:8px" onclick="viewRecord(${i})">View Complete Record</button>`;c.dataset.idx=i;el.appendChild(c)})
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+window.viewRecord=i=>{const r=adminRecords[i],el=document.getElementById("record-detail");el.classList.remove("hidden");let h=`<h3>${escapeHtml(r.leaderName)} — ${escapeHtml(r.monthName)} ${r.year}</h3><p class="small">UID: ${escapeHtml(r.uid||"")}<br>Submitted: ${escapeHtml(r.submittedAt||"")}</p><div class="detail-grid">`;
+h+=`<div class="detail-box"><h4>Devotion</h4><div>${r.devotionDays||0} days</div><div>${Object.entries(r.devotion||{}).map(([d,v])=>`${d}: ${v?"✓":"—"}`).join(" · ")}</div></div>`;
+for(const sec of sections){h+=`<div class="detail-box"><h4>${escapeHtml(sec)}</h4>`;for(let w=1;w<=5;w++){const a=r.attendance?.[sec]?.[`week${w}`]||"NM",cnt=r.attendance?.[sec]?.[`week${w}_count`];h+=`Week ${w}: <b>${a}</b>${cnt!==undefined?` · Count: ${escapeHtml(cnt)}`:""}<br>`}h+="</div>"}h+="</div><button class='light' onclick=\"document.getElementById('record-detail').classList.add('hidden')\">Close</button>`;el.innerHTML=h;el.scrollIntoView({behavior:"smooth"})}
+window.exportCSV=()=>{
+ const rows=[["Leader","Year","Month","Devotion Days",...sections.flatMap(s=>[`${s} W1`,`${s} W1 Count`,`${s} W2`,`${s} W2 Count`,`${s} W3`,`${s} W3 Count`,`${s} W4`,`${s} W4 Count`,`${s} W5`,`${s} W5 Count`])]];
+ adminRecords.forEach(r=>{const row=[r.leaderName,r.year,r.monthName,r.devotionDays];sections.forEach(s=>{for(let w=1;w<=5;w++)row.push(r.attendance?.[s]?.[`week${w}`]||"NM",r.attendance?.[s]?.[`week${w}_count`]??"")});rows.push(row)});
+ const csv=rows.map(x=>x.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="cym-tracker-export.csv";a.click()
+}
+window.saveFullPageImage=()=>{
+ if(window.Android&&Android.saveImage){html2canvas(document.body,{scale:Math.min(devicePixelRatio||1,2),useCORS:true,backgroundColor:"#f5f5f5"}).then(c=>Android.saveImage(c.toDataURL("image/png"))).catch(()=>msg("Unable to create image.","error"))}
+ else msg("Save image is available in the Android app.","small")
+}
+renderMonthButtons();renderCalendar();renderAttendance();ensureLeaderAuth();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body></html>
