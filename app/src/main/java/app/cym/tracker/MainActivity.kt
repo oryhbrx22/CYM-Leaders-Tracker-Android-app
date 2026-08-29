@@ -86,8 +86,8 @@ class MainActivity : ComponentActivity() {
 
         if (savedInstanceState == null) {
             webView.loadUrl(
-                "https://appassets.androidplatform.net/assets/index.html"
-            )
+    "https://oryhbrx22.github.io/CYM-Leaders-Tracker-App/"
+)
         } else {
             webView.restoreState(savedInstanceState)
         }
