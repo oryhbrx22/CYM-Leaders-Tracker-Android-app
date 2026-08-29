@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CYM Leaders' Tracker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    color: #222;
+}
+
+header {
+    background: #222;
+    color: white;
+    padding: 18px 15px;
+    text-align: center;
+}
+
+.header-logo {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: white;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 3px solid #4CAF50;
+}
+
+.header-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.logo-placeholder {
+    color: #4CAF50;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+header h1 {
+    margin: 5px 0;
+    font-size: 24px;
+}
+
+#user-info {
+    font-size: 14px;
+    opacity: .85;
+    margin-top: 5px;
+}
+
+.container {
+    width: 100%;
+    max-width: 950px;
+    margin: auto;
+    padding: 15px;
+}
+
+.top-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.top-buttons button {
+    flex: 1;
+    min-width: 140px;
+}
+
+button {
+    border: none;
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.secondary {
+    background: #333;
+    color: white;
+}
+
+.board-button {
+    background: #1976D2;
+    color: white;
+}
+
+.form-section,
+.board-section {
+    background: white;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 7px rgba(0,0,0,.08);
+}
+
+.username-section {
+    margin-bottom: 15px;
+}
+
+.username-section label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+#username {
+    width: 100%;
+    max-width: 500px;
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.month-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    margin-bottom: 15px;
+}
+
+.month-selector button {
+    background: #ddd;
+    color: #222;
+}
+
+.month-selector button.active {
+    background: #4CAF50;
+    color: white;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+h3 {
+    margin-bottom: 12px;
+}
+
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 20px;
+}
+
+.calendar div {
+    min-height: 48px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    text-align: center;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.calendar .day-header {
+    min-height: auto;
+    background: #eee;
+    font-weight: bold;
+}
+
+.calendar input {
+    width: 18px;
+    height: 18px;
+    margin-top: 5px;
+}
+
+.attendance-title {
+    margin-top: 22px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.legend {
+    margin: 8px 0 15px;
+    font-size: 13px;
+}
+
+.legend span {
+    display: inline-block;
+    margin-right: 12px;
+}
+
+.legend-present {
+    color: #4CAF50;
+}
+
+.legend-absent {
+    color: #f44336;
+}
+
+.legend-nm {
+    color: #777;
+}
+
+.attendance-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.week-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.attendance-grid button {
+    border: 1px solid #ccc;
+    background: #eee;
+    color: #222;
+}
+
+.attendance-grid button.P {
+    background: #4CAF50;
+    color: white;
+}
+
+.attendance-grid button.A {
+    background: #f44336;
+    color: white;
+}
+
+.attendance-grid button.NM {
+    background: #888;
+    color: white;
+}
+
+.attendance-input {
+    width: 48px;
+    padding: 7px 3px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.submit-area {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.submit-area button {
+    width: 100%;
+    max-width: 400px;
+    padding: 13px;
+    font-size: 16px;
+}
+
+.status {
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    display: none;
+}
+
+.status.success {
+    display: block;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status.error {
+    display: block;
+    background: #ffebee;
+    color: #c62828;
+}
+
+.board-section {
+    display: none;
+}
+
+.board-section.visible {
+    display: block;
+}
+
+.board-entry {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fafafa;
+}
+
+.board-entry-name {
+    font-weight: bold;
+    font-size: 19px;
+}
+
+.board-entry-month {
+    color: #555;
+    font-size: 14px;
+    margin: 4px 0 15px;
+}
+
+.board-summary {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+.board-summary strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.board-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    margin-top: 8px;
+}
+
+.board-day {
+    min-height: 38px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 3px;
+    text-align: center;
+    font-size: 11px;
+    background: #fff;
+}
+
+.board-day.header {
+    min-height: auto;
+    font-weight: bold;
+    background: #eee;
+}
+
+.board-day.devotion {
+    background: #4CAF50;
+    color: white;
+}
+
+.board-attendance-section {
+    margin-top: 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.board-attendance-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.board-week-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.board-week {
+    border-radius: 5px;
+    padding: 7px 9px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+}
+
+.board-week.P {
+    background: #4CAF50;
+    color: white;
+}
+
+.board-week.A {
+    background: #f44336;
+    color: white;
+}
+
+.board-week.NM {
+    background: #888;
+    color: white;
+}
+
+.board-count {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 3px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f5f5f5;
+    font-size: 11px;
+}
+
+.empty-board {
+    text-align: center;
+    color: #777;
+    padding: 25px 10px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+footer {
+    text-align: center;
+    color: #777;
+    font-size: 12px;
+    padding: 20px;
+}
+
+@media (max-width: 600px) {
+
+    .container {
+        padding: 10px;
+    }
+
+    .month-selector {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .calendar div {
+        min-height: 43px;
+        font-size: 12px;
+    }
+
+    .calendar input {
+        width: 16px;
+        height: 16px;
+    }
+
+    .attendance-grid button {
+        padding: 8px 9px;
+        font-size: 12px;
+    }
+
+    .board-calendar {
+        gap: 2px;
+    }
+
+    .board-day {
+        min-height: 34px;
+        font-size: 10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <div class="header-logo">
+
+        <img
+            id="logoImage"
+            src="logo.png"
+            alt="CYM Logo"
+            onerror="
+                this.style.display='none';
+                document.getElementById('logoPlaceholder').style.display='block';
+            "
+        >
+
+        <div
+            id="logoPlaceholder"
+            class="logo-placeholder"
+            style="display:none;"
+        >
+            CYM
+        </div>
+
+    </div>
+
+    <h1>CYM Leaders' Tracker</h1>
+
+    <div id="user-info">
+        Leader Tracker
+    </div>
+
+</header>
+
+
+<div class="container">
+
+    <div class="top-buttons">
+
+        <button
+            class="primary"
+            onclick="showTracker()"
+        >
+            📋 Tracker
+        </button>
+
+        <button
+            class="board-button"
+            onclick="showTransparencyBoard()"
+        >
+            📊 Transparency Board
+        </button>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TRACKER -->
+    <!-- ================================================= -->
+
+    <div id="trackerView">
+
+        <div class="form-section">
+
+            <div class="username-section">
+
+                <label for="username">
+                    Full Name
+                </label>
+
+                <input
+                    id="username"
+                    type="text"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                >
+
+            </div>
+
+
+            <div
+                id="month-selector"
+                class="month-selector"
+            ></div>
+
+
+            <h2 id="month-title"></h2>
+
+
+            <h3>
+                DEVOTION:
+                <span id="devotion-count">0</span>
+                days
+            </h3>
+
+
+            <div
+                id="calendar"
+                class="calendar"
+            ></div>
+
+
+            <div
+                id="attendance-forms"
+            ></div>
+
+
+            <div class="submit-area">
+
+                <button
+                    class="primary"
+                    onclick="submitTracker()"
+                >
+                    SUBMIT TRACKER
+                </button>
+
+                <div
+                    id="status"
+                    class="status"
+                ></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TRANSPARENCY BOARD -->
+    <!-- ================================================= -->
+
+    <div
+        id="transparencyView"
+        class="board-section"
+    >
+
+        <h2>
+            📊 Transparency Board
+        </h2>
+
+        <p>
+            All submitted CYM leader trackers are shown here.
+        </p>
+
+        <button
+            class="primary"
+            onclick="loadTransparencyBoard()"
+        >
+            🔄 Refresh Board
+        </button>
+
+        <div
+            id="boardEntries"
+            style="margin-top:15px;"
+        >
+            <div class="empty-board">
+                Loading records...
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+    CYM Leaders' Tracker
+</footer>
+
+
+<script type="module">
+
+/*
+==========================================================
+ FIREBASE IMPORTS
+==========================================================
+*/
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+
+/*
+==========================================================
+ FIREBASE CONFIG
+==========================================================
+*/
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyCsQrzsGHZ7o7VY9EKIwSTnrBIi1x7fR_I",
+
+    authDomain:
+        "cym-leaders-web-type-handouts.firebaseapp.com",
+
+    projectId:
+        "cym-leaders-web-type-handouts",
+
+    storageBucket:
+        "cym-leaders-web-type-handouts.firebasestorage.app",
+
+    messagingSenderId:
+        "936994717986",
+
+    appId:
+        "1:936994717986:web:a36140d381a832b940e57b",
+
+    measurementId:
+        "G-QNLQC649FX"
+};
+
+
+let db = null;
+
+
+/*
+==========================================================
+ FIREBASE INITIALIZATION
+==========================================================
+*/
+
+try {
+
+    const firebaseApp =
+        initializeApp(firebaseConfig);
+
+    db =
+        getFirestore(firebaseApp);
+
+    console.log("Firebase initialized");
+
+} catch (error) {
+
+    console.error(
+        "Firebase initialization failed:",
+        error
+    );
+
+}
+
+
+/*
+==========================================================
+ DATA
+==========================================================
+*/
+
+const months = [
+
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+
+];
+
+
+const sections = [
+
+    "W12 DISCIPLESHIP",
+    "CELL GROUP",
+    "W12 MEETING",
+    "SUNDAY SERVICES",
+    "CYM NIGHT",
+    "THURSDAY NIGHT TRAINING",
+    "PRAYER MEETING"
+
+];
+
+
+let currentMonth = new Date().getMonth();
+
+const year =
+    new Date().getFullYear();
+
+
+/*
+==========================================================
+ HELPERS
+==========================================================
+*/
+
+function daysInMonth(month, year) {
+
+    return new Date(
+        year,
+        month + 1,
+        0
+    ).getDate();
+
+}
+
+
+function storageKey(prefix, ...parts) {
+
+    return [
+        prefix,
+        ...parts
+    ].join("_");
+
+}
+
+
+/*
+==========================================================
+ MONTH BUTTONS
+==========================================================
+*/
+
+function renderMonthButtons() {
+
+    const container =
+        document.getElementById(
+            "month-selector"
+        );
+
+    container.innerHTML = "";
+
+
+    months.forEach(
+        (month, index) => {
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+            button.textContent =
+                month;
+
+
+            if (
+                index === currentMonth
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+
+            }
+
+
+            button.onclick =
+                function () {
+
+                    currentMonth =
+                        index;
+
+
+                    document
+                        .querySelectorAll(
+                            ".month-selector button"
+                        )
+                        .forEach(
+                            btn =>
+                                btn.classList.remove(
+                                    "active"
+                                )
+                        );
+
+
+                    button.classList.add(
+                        "active"
+                    );
+
+
+                    renderCalendar();
+
+                    renderAttendance();
+
+                };
+
+
+            container.appendChild(
+                button
+            );
+
+        }
+    );
+
+}
+
+
+/*
+==========================================================
+ DEVOTION CALENDAR
+==========================================================
+*/
+
+function renderCalendar() {
+
+    const calendar =
+        document.getElementById(
+            "calendar"
+        );
+
+    calendar.innerHTML = "";
+
+
+    document.getElementById(
+        "month-title"
+    ).textContent =
+        months[currentMonth] +
+        " " +
+        year;
+
+
+    const days = [
+
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+
+    ];
+
+
+    days.forEach(
+        day => {
+
+            const cell =
+                document.createElement(
+                    "div"
+                );
+
+            cell.className =
+                "day-header";
+
+            cell.textContent =
+                day;
+
+            calendar.appendChild(
+                cell
+            );
+
+        }
+    );
+
+
+    const firstDay =
+        new Date(
+            year,
+            currentMonth,
+            1
+        ).getDay();
+
+
+    for (
+        let i = 0;
+        i < firstDay;
+        i++
+    ) {
+
+        calendar.appendChild(
+            document.createElement(
+                "div"
+            )
+        );
+
+    }
+
+
+    const totalDays =
+        daysInMonth(
+            currentMonth,
+            year
+        );
+
+
+    for (
+        let day = 1;
+        day <= totalDays;
+        day++
+    ) {
+
+        const cell =
+            document.createElement(
+                "div"
+            );
+
+
+        const checkbox =
+            document.createElement(
+                "input"
+            );
+
+        checkbox.type =
+            "checkbox";
+
+
+        const key =
+            storageKey(
+                "dev",
+                year,
+                currentMonth,
+                day
+            );
+
+
+        checkbox.checked =
+            localStorage.getItem(
+                key
+            ) === "1";
+
+
+        checkbox.onchange =
+            function () {
+
+                localStorage.setItem(
+                    key,
+                    checkbox.checked
+                        ? "1"
+                        : "0"
+                );
+
+                updateDevotion();
+
+            };
+
+
+        cell.innerHTML =
+            day + "<br>";
+
+
+        cell.appendChild(
+            checkbox
+        );
+
+
+        calendar.appendChild(
+            cell
+        );
+
+    }
+
+
+    updateDevotion();
+
+}
+
+
+function updateDevotion() {
+
+    let count = 0;
+
+
+    document
+        .querySelectorAll(
+            "#calendar input"
+        )
+        .forEach(
+            checkbox => {
+
+                if (
+                    checkbox.checked
+                ) {
+
+                    count++;
+
+                }
+
+            }
+        );
+
+
+    document.getElementById(
+        "devotion-count"
+    ).textContent =
+        count;
+
+}
+
+
+/*
+==========================================================
+ ATTENDANCE
+==========================================================
+*/
+
+function renderAttendance() {
+
+    const container =
+        document.getElementById(
+            "attendance-forms"
+        );
+
+    container.innerHTML = "";
+
+
+    const title =
+        document.createElement(
+            "div"
+        );
+
+    title.className =
+        "attendance-title";
+
+    title.textContent =
+        "FULL MONTH ATTENDANCE";
+
+
+    container.appendChild(
+        title
+    );
+
+
+    const legend =
+        document.createElement(
+            "div"
+        );
+
+    legend.className =
+        "legend";
+
+
+    legend.innerHTML =
+
+        '<span class="legend-present">● Present</span>' +
+
+        '<span class="legend-absent">● Absent</span>' +
+
+        '<span class="legend-nm">● No Meeting</span>';
+
+
+    container.appendChild(
+        legend
+    );
+
+
+    sections.forEach(
+        section => {
+
+            const label =
+                document.createElement(
+                    "div"
+                );
+
+            label.className =
+                "attendance-title";
+
+            label.textContent =
+                section;
+
+
+            container.appendChild(
+                label
+            );
+
+
+            const grid =
+                document.createElement(
+                    "div"
+                );
+
+            grid.className =
+                "attendance-grid";
+
+
+            for (
+                let week = 1;
+                week <= 5;
+                week++
+            ) {
+
+                const wrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+                wrapper.className =
+                    "week-wrapper";
+
+
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.textContent =
+                    "Week " + week;
+
+
+                const key =
+                    storageKey(
+                        "att",
+                        year,
+                        currentMonth,
+                        section,
+                        week
+                    );
+
+
+                const saved =
+                    localStorage.getItem(
+                        key
+                    ) || "NM";
+
+
+                button.dataset.state =
+                    saved;
+
+
+                button.classList.add(
+                    saved
+                );
+
+
+                button.onclick =
+                    function () {
+
+                        let next;
+
+
+                        if (
+                            button.dataset.state ===
+                            "NM"
+                        ) {
+
+                            next = "P";
+
+                        } else if (
+                            button.dataset.state ===
+                            "P"
+                        ) {
+
+                            next = "A";
+
+                        } else {
+
+                            next = "NM";
+
+                        }
+
+
+                        button.classList.remove(
+                            "P",
+                            "A",
+                            "NM"
+                        );
+
+
