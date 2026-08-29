@@ -15,6 +15,7 @@ android {
         versionName = "1.0"
     }
 
+    // Fix: Java and Kotlin must use the same JVM target
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -28,6 +29,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+
             buildConfigField(
                 "String",
                 "APP_NAME",
