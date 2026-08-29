@@ -1,23 +1,16 @@
 package app.cym.tracker
 
-import android.content.ContentValues
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
-import android.webkit.JavascriptInterface
+import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.webkit.WebViewAssetLoader
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import java.util.Base64
 
 class MainActivity : ComponentActivity() {
 
@@ -33,20 +26,11 @@ class MainActivity : ComponentActivity() {
             window.decorView
         ).isAppearanceLightNavigationBars = true
 
-        val assetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler(
-                "/assets/",
-                WebViewAssetLoader.AssetsPathHandler(this)
-            )
-            .build()
-
         webView = WebView(this)
 
         webView.setBackgroundColor(
-            0xFFF5F5F5.toInt()
+            0xFFF3F4F6.toInt()
         )
-
-        setContentView(webView)
 
         webView.settings.apply {
             javaScriptEnabled = true
@@ -56,8 +40,6 @@ class MainActivity : ComponentActivity() {
             allowFileAccess = false
             allowContentAccess = false
 
-            mediaPlaybackRequiresUserGesture = false
-
             cacheMode = WebSettings.LOAD_DEFAULT
 
             builtInZoomControls = false
@@ -65,31 +47,66 @@ class MainActivity : ComponentActivity() {
             setSupportZoom(false)
 
             useWideViewPort = true
-            loadWithOverviewMode = true
+            loadWithOverviewMode = false
+
+            mixedContentMode =
+                WebSettings.MIXED_CONTENT_NEVER_ALLOW
         }
 
+        /*
+         * IMPORTANT:
+         * We are loading the WORKING GitHub Pages site.
+         */
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(
+
+            override fun onPageFinished(
                 view: WebView,
-                request: android.webkit.WebResourceRequest
-            ): android.webkit.WebResourceResponse? {
-                return assetLoader.shouldInterceptRequest(request.url)
+                url: String
+            ) {
+                super.onPageFinished(view, url)
+
+                Toast.makeText(
+                    this@MainActivity,
+                    "CYM Tracker loaded",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
-        webView.webChromeClient = WebChromeClient()
+        /*
+         * JavaScript console logging.
+         * Useful if Firebase/WebView has an error.
+         */
+        webView.webChromeClient = object : WebChromeClient() {
 
-        webView.addJavascriptInterface(
-            AndroidBridge(),
-            "Android"
-        )
+            override fun onConsoleMessage(
+                consoleMessage: ConsoleMessage
+            ): Boolean {
+
+                android.util.Log.d(
+                    "CYM_WEBVIEW",
+                    "${consoleMessage.message()} " +
+                        "(${consoleMessage.sourceId()}:" +
+                        "${consoleMessage.lineNumber()})"
+                )
+
+                return true
+            }
+        }
+
+        setContentView(webView)
 
         if (savedInstanceState == null) {
+
             webView.loadUrl(
-    "https://oryhbrx22.github.io/CYM-Leaders-Tracker-App/"
-)
+                "https://oryhbrx22.github.io/CYM-Leaders-Tracker-App/"
+            )
+
         } else {
-            webView.restoreState(savedInstanceState)
+
+            webView.restoreState(
+                savedInstanceState
+            )
         }
 
         onBackPressedDispatcher.addCallback(
@@ -97,6 +114,7 @@ class MainActivity : ComponentActivity() {
             object : OnBackPressedCallback(true) {
 
                 override fun handleOnBackPressed() {
+
                     if (webView.canGoBack()) {
                         webView.goBack()
                     } else {
@@ -111,116 +129,20 @@ class MainActivity : ComponentActivity() {
         outState: Bundle
     ) {
         webView.saveState(outState)
-        super.onSaveInstanceState(outState)
+
+        super.onSaveInstanceState(
+            outState
+        )
     }
 
-    inner class AndroidBridge {
+    override fun onDestroy() {
 
-        @JavascriptInterface
-        fun saveImage(dataUrl: String) {
-
-            try {
-
-                val encoded = dataUrl.substringAfter(
-                    "base64,",
-                    ""
-                )
-
-                val bytes =
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Base64.getDecoder().decode(encoded)
-                    } else {
-                        android.util.Base64.decode(
-                            encoded,
-                            android.util.Base64.DEFAULT
-                        )
-                    }
-
-                val values = ContentValues().apply {
-
-                    put(
-                        MediaStore.Images.Media.DISPLAY_NAME,
-                        "cym-tracker-${System.currentTimeMillis()}.png"
-                    )
-
-                    put(
-                        MediaStore.Images.Media.MIME_TYPE,
-                        "image/png"
-                    )
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-                        put(
-                            MediaStore.Images.Media.RELATIVE_PATH,
-                            Environment.DIRECTORY_PICTURES +
-                                    "/CYM Tracker"
-                        )
-
-                        put(
-                            MediaStore.Images.Media.IS_PENDING,
-                            1
-                        )
-                    }
-                }
-
-                val uri: Uri =
-                    contentResolver.insert(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        values
-                    )
-                        ?: throw IllegalStateException(
-                            "Could not create gallery entry"
-                        )
-
-                contentResolver
-                    .openOutputStream(uri)
-                    .use { output ->
-
-                        if (output == null) {
-                            throw IllegalStateException(
-                                "Could not open gallery stream"
-                            )
-                        }
-
-                        output.write(bytes)
-                        output.flush()
-                    }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-                    contentResolver.update(
-                        uri,
-                        ContentValues().apply {
-                            put(
-                                MediaStore.Images.Media.IS_PENDING,
-                                0
-                            )
-                        },
-                        null,
-                        null
-                    )
-                }
-
-                runOnUiThread {
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Image saved to Pictures/CYM Tracker",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-            } catch (e: Exception) {
-
-                runOnUiThread {
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Could not save image: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
+        webView.apply {
+            stopLoading()
+            webChromeClient = null
+            destroy()
         }
+
+        super.onDestroy()
     }
 }
