@@ -11,6 +11,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebViewAssetLoader
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -31,6 +32,13 @@ class MainActivity : ComponentActivity() {
             window,
             window.decorView
         ).isAppearanceLightNavigationBars = true
+
+        val assetLoader = WebViewAssetLoader.Builder()
+            .addPathHandler(
+                "/assets/",
+                WebViewAssetLoader.AssetsPathHandler(this)
+            )
+            .build()
 
         webView = WebView(this)
 
@@ -60,7 +68,14 @@ class MainActivity : ComponentActivity() {
             loadWithOverviewMode = true
         }
 
-        webView.webViewClient = object : WebViewClient() {}
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView,
+                request: android.webkit.WebResourceRequest
+            ): android.webkit.WebResourceResponse? {
+                return assetLoader.shouldInterceptRequest(request.url)
+            }
+        }
 
         webView.webChromeClient = WebChromeClient()
 
@@ -71,7 +86,7 @@ class MainActivity : ComponentActivity() {
 
         if (savedInstanceState == null) {
             webView.loadUrl(
-                "file:///android_asset/index.html"
+                "https://appassets.androidplatform.net/assets/index.html"
             )
         } else {
             webView.restoreState(savedInstanceState)
