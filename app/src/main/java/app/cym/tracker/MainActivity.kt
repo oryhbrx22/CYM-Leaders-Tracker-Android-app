@@ -1,6 +1,6 @@
 package app.cym.tracker
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.content.ContentValues
 import android.net.Uri
 import android.os.Build
